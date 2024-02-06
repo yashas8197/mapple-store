@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>replit</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+
+<body>
+  <div class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light  container">
+      <div class="container-fluid">
+        <div>
+          <a class="navbar-brand" href="index.html">Computer Management</a>
+        </div>
+
+        <div>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ">
+              <li class="nav-item">
+                <a class="nav-link " aria-current="page" href="index.html">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link active" href="#">Computers List</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="add_computers.html">Add Computers</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <main class="container my-4">
+    <h1>Computer List</h1>
+
+    <label>Filter By Category:</label>
+    <select class="form-select my-2" id="selectCategory">
+      <option value="All">All</option>
+      <option value="Laptop">Laptop</option>
+      <option value="Desktop">Desktop</option>
+      <option value="Tablet">Tablet</option>
+    </select>
+
+    <div id="successMessage"></div>
+    <ul class="list-group" id="computerList"></ul>
+  </main>
+
+  <script>
+    const computerList = document.querySelector('#computerList')
+    const successMessage = document.querySelector('#successMessage')
+    const selectCategory = document.querySelector('#selectCategory')
+    const computerData = []
+    const API_URL = ' https://computer-backend-student-neog.replit.app/computers'
+
+    function fetchData() {
+      computerList.innerHTML = ' '
+      fetch(API_URL)
+        .then(function (response) {
+          return response.json()
+        })
+        .then(function (data) {
+          generateList(data)
+          deletion()
+          computerData.push(data)
+        })
+    }
+
+    function generateList(data) {
+      computerList.innerHTML = " "
+      for (let i = 0; i < data.length; i++) {
+        const listElement = document.createElement('div')
+
+        listElement.className = 'list-group-item'
+
+        listElement.innerHTML = `<p>${data[i].name} - Quantity : ${data[i].quantity} - Category: ${data[i].category} - Manufacture Date: ${data[i].manufactureDate}<button class="btn btn-danger float-end" data_id='${data[i]._id}' id="delBtn">DELETE</button></p>`
+
+        computerList.appendChild(listElement)
+      }
+    }
+
+    function deletion() {
+      const delBtn = document.querySelectorAll('#delBtn')
+
+      for (let i = 0; i < delBtn.length; i++) {
+        delBtn[i].addEventListener('click', function (e) {
+          const computerId = e.target.getAttribute('data_id')
+
+          fetch(`${API_URL}/${computerId}`, {
+            method: 'DELETE'
+          })
+            .then(function (response) {
+              return response.json()
+            })
+            .then(function (data) {
+              if (data) {
+                successMessage.innerHTML = `<p class="text-danger">Computer Deleted Successfully</p>`
+                setTimeout(() => {
+                  successMessage.innerHTML = " "
+                }, 2000)
+                fetchData()
+              }
+            })
+        })
+      }
+    }
+
+
+    selectCategory.addEventListener('change', applyFilter)
+
+
+    function applyFilter() {
+      const selectedCategory = selectCategory.value;
+      const filteredCategory = []
+
+      if (selectedCategory !== "All") {
+        for (let i = 0; i < computerData[0].length; i++) {
+          if (selectedCategory === computerData[0][i].category) {
+
+            filteredCategory.push(computerData[0][i])
+          }
+        }
+        generateList(filteredCategory)
+      } else {
+        generateList(computerData[0])
+      }
+
+    }
+
+
+    fetchData()
+
+  </script>
+</body>
+
+</html>
